@@ -14,6 +14,8 @@ namespace RabbitMQConsumer
 
             factory.Uri = new Uri("amqp://guest:guest@localhost:5672/%2F");
 
+            //factory.HostName = "localhost";
+
             using (var connection = factory.CreateConnection())
             {
                 using (var channel = connection.CreateModel())

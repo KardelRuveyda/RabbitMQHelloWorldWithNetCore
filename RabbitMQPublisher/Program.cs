@@ -12,6 +12,8 @@ namespace RabbitMQPublisher
             //Rabbitmqye ulaşmak için
 
             factory.Uri = new Uri("amqp://guest:guest@localhost:5672/%2F");
+            //factory.HostName = "localhost";
+
 
             using (var connection = factory.CreateConnection())
             {
@@ -34,6 +36,8 @@ namespace RabbitMQPublisher
 
                 Console.WriteLine("Çıkış yapmak için tıklayınız.");
                 Console.ReadLine();
+
+
 
             }
         }
