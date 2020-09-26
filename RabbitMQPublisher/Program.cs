@@ -6,7 +6,7 @@ namespace RabbitMQPublisher
 {
     class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var factory = new ConnectionFactory();
             //Rabbitmqye ulaşmak için
@@ -22,15 +22,27 @@ namespace RabbitMQPublisher
                     //durable false yapılırsa, restart yapılırsa mesaj gider.
                     //True yapılırsa fiziksel liste yazar.
                     //false : memoryde dursun daha hızlı yazma imkanı.
-                    channel.QueueDeclare("hello", false, false, false, null);
+                    channel.QueueDeclare("task_queue", false, false, false, null);
 
-                    string Message = "Hello World";
+                    string Message = GetMessage(args);
 
-                    var bodyByte = Encoding.UTF8.GetBytes(Message);
+                    for (int i = 1; i < 11; i++)
+                    {
 
-                    //mesajlar byte dizisi olmalı
-                    channel.BasicPublish("", routingKey: "hello", null, body: bodyByte);
-                    Console.WriteLine("Mesajınız Gönderilmiştir. ");
+                        var bodyByte = Encoding.UTF8.GetBytes($"{Message} - {i}");
+
+                        //Mesaja sağlama alma.
+                        var properties = channel.CreateBasicProperties();
+                        properties.Persistent = true;
+
+                        //mesajlar byte dizisi olmalı
+                        //instance çökse bile mesaj duruyor olacak. bu sayede proporties gönderildi.
+                        channel.BasicPublish("", routingKey: "task_queue",properties, body: bodyByte);
+                        Console.WriteLine($"Mesajınız Gönderilmiştir:{Message}-{i}");
+
+                    }
+
+
 
                 }
 
@@ -40,6 +52,12 @@ namespace RabbitMQPublisher
 
 
             }
+        }
+
+         
+        private static string GetMessage(string[] args)
+        {
+           return args[0].ToString();
         }
     }
 }
