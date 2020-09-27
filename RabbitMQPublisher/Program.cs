@@ -22,7 +22,8 @@ namespace RabbitMQPublisher
                     //durable false yapılırsa, restart yapılırsa mesaj gider.
                     //True yapılırsa fiziksel liste yazar.
                     //false : memoryde dursun daha hızlı yazma imkanı.
-                    channel.QueueDeclare("task_queue", false, false, false, null);
+                   
+                    channel.ExchangeDeclare("logs",ExchangeType.Fanout,durable:true);
 
                     string Message = GetMessage(args);
 
@@ -35,9 +36,9 @@ namespace RabbitMQPublisher
                         var properties = channel.CreateBasicProperties();
                         properties.Persistent = true;
 
-                        //mesajlar byte dizisi olmalı
-                        //instance çökse bile mesaj duruyor olacak. bu sayede proporties gönderildi.
-                        channel.BasicPublish("", routingKey: "task_queue",properties, body: bodyByte);
+                        channel.BasicPublish("logs", routingKey: "",properties, body: bodyByte);
+
+
                         Console.WriteLine($"Mesajınız Gönderilmiştir:{Message}-{i}");
 
                     }

@@ -21,38 +21,40 @@ namespace RabbitMQConsumer
             {
                 using (var channel = connection.CreateModel())
                 {
-                    channel.QueueDeclare("task_queue",  false, false, false, null);
 
+                    channel.ExchangeDeclare("logs", ExchangeType.Fanout, durable: true);
+
+                    var queueName = channel.QueueDeclare().QueueName;
+
+                    channel.QueueBind(queue: queueName, exchange: "logs", routingKey: "");
+                    
+                    
                     //Bana bir tane mesaj geldi prefetchCount, bunu hallettikten sonra bana tekrar mesaj gönder
                     //O nedenle 1 veriyorum. 2 tane işlesin düşünülürse; false yerine true denilebilirdi
                     //1 yerine 10 derseniz ve true derseniz.
                     //Bu instance den 5 tane oluşturursanız. 
                     //Bu 5 tane instance toplam 10 tan mesaj alabilir tek seferde(true) dersem. 
                     //False dersem iki kol da ayrı ayrı 10 tane mesaj alabilir 
-
+                    
                     channel.BasicQos(prefetchSize:0,prefetchCount:1, false);
 
-                    Console.WriteLine("Mesajları bekliyorum..");
+                    Console.WriteLine("Logları bekliyorum..");
 
                     var consumer = new EventingBasicConsumer(channel);
-
-                    //autoAck ben bilgi göndereceğim sen gönderme.. autoAck
-                    //true olursa mesaj geldiği anda siler. 
-                    channel.BasicConsume("task_queue", autoAck:false, consumer);
+                    channel.BasicConsume(queueName, autoAck:false, consumer);
                     consumer.Received += (model, ea) =>
                     {   
                         
-                        var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                        Console.WriteLine("Mesaj alındı : " + message);
+                        var log = Encoding.UTF8.GetString(ea.Body.ToArray());
+                        Console.WriteLine("Log alındı : " + log);
 
                         int time = int.Parse(GetMessage(args));
                         Thread.Sleep(time);
-                        Console.WriteLine("Mesaj işlendi...");
+                        Console.WriteLine("Loglama bitti...");
 
                         channel.BasicAck(ea.DeliveryTag, false);
                         //Mesaj başarıyla işlendi. Kuyruktan silebilirsin anlamına gelir. 
                         // Mesajlar sırayla dağıtıacak birer birer dağıtılacak. 
-                        Console.ReadLine();
                     };
 
                     Console.WriteLine("Çıkış yapmak için tıklayınız.");
